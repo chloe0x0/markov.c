@@ -1,5 +1,6 @@
 CC = gcc
 CFLAGS = -O3
+FILES = src/hashtable.c
 OUTPUT_NAME = markov
 
 markov: src/markov.c
