@@ -8,7 +8,7 @@ typedef uint32_t** cmarkov;
 // Fit a markov chain to text where each state is a character
 cmarkov character_fit(const char**, int);
 // Fit a markov chain to text where each state is an ngram
-markov* ngram_fit(const char**, int, int);
+markov* ngram_fit(const char**, uint32_t, uint32_t);
 // Fit a markov chain to text where each state is arbitrary
 markov* fit(const char**, int, int);
 // Read n-grams from text

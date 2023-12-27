@@ -89,6 +89,21 @@ void destroy_cmarkov(cmarkov* chain) {
     free(chain); 
 }
 
+markov* ngram_fit(const char** paths, uint32_t num_paths, uint32_t N) {
+    markov* chain = (markov*)table_with_capacity();
+
+    for (int i = 0; i < num_paths; i++) {
+        FILE* fp = fopen(paths[i], "r");
+
+        // read the n-grams
+
+
+        fclose(fp);
+    }
+
+    return chain;
+}
+
 int main(int argc, char** argv) {
     if (argc < 2) {
         //puts(USAGE);

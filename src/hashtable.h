@@ -53,5 +53,7 @@ hash_table* table_with_capacity(size_t);
 void set_hash(hash_table* table, size_t (*f)(char*)) {table->hash = f;}
 // Destructor for a hash table
 void delete_table(hash_table*);
+// Function for rehashing a table in place
+void rehash(hash_table*);
 
 #endif /* End of HASHTABLE_H_ implementation */

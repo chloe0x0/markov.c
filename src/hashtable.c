@@ -2,10 +2,13 @@
 #include <stdbool.h>
 #include <stdlib.h>
 #include <string.h>
-#include "hashtable.h"
 #include <stdint.h>
 
+#include "hashtable.h"
+
 #define INIT_CAP 1024
+#define REHASH_THRESH 0.75
+#define GROWTH_FACTOR 2
 #define n 1
 
 /* Default Hash Function 
@@ -113,7 +116,25 @@ bool search(char* key, hash_table* table) {
     return false;
 }
 
+void rehash(hash_table* table) {
+    table->capacity *= GROWTH_FACTOR;
+
+    for (int i = 0; i < table->capacity; i++) {
+        if (table->kvs[i] == NULL) continue;
+        // Need to rehash and insert into new table
+        
+    }
+}
+
 bool set(char* key, void* val, hash_table* table) {
+    // check if we need to rehash
+    // by computing the ~load~factor >w<
+    float load = (float)table->size / (float)table->capacity;
+    if (load > REHASH_THRESH) {
+        // rehash
+        rehash(table);
+    }
+
     size_t hash = table->hash(key) % table->capacity;
     
     kv* pair = table->kvs[hash];
@@ -130,28 +151,19 @@ bool set(char* key, void* val, hash_table* table) {
     kv* new_kv = construct_kv(key, val);
     new_kv->next = table->kvs[hash];
     table->kvs[hash] = new_kv;
+    table->size++;
 }
 
 bool update(char* key, void* new_val, hash_table* table) {
     size_t hash = table->hash(key) % table->capacity;
     kv* pair = table->kvs[hash];
-    // element is not in the hashtable
-    if (!pair->key) return false; 
-    // Check if the element is at the curr kv pair
-    if (!strcmp(pair->key,key)) {
-        table->kvs[hash]->val = new_val;
-        return true;
-    }
 
-    kv* search = pair->next;
-    if (search == NULL) return false;
-
-    while (search->next != NULL) {
-        if (!strcmp(search->key,key)) {
-            search->val = new_val;
+    while (pair != NULL) {
+        if (!strcmp(pair->key,key)) {
+            pair->val = new_val;
             return true;
         }
-        search = search->next;
+        pair = pair->next;
     }
 
     return false;
