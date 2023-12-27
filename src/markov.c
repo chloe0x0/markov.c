@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdbool.h>
-
+#include <time.h>
 #include "markov.h"
 
 #define USAGE "markov.exe n-gram-size [text file(s)]"
@@ -51,9 +51,42 @@ cmarkov character_fit(const char** paths, int num_paths) {
     return chain;
 }
 
+char csample(cmarkov* chain, char state) {
+    // get transition list
+    uint32_t* trans = (*chain)[state];
+
+    // perform random weighted sampling
+    // we know ahead of time that the number of elements is 256
+    // compute the sum
+    uint32_t sum = 0;
+    for (int i = 0; i < 256; i++) sum += trans[i];
+    size_t r = rand() % sum, res = 0, acc = 0;
+    for (int i = 0; i < 256; i++) {
+        acc += trans[i];
+        if (r < acc) {
+            res = i;
+            break;
+        }
+    }
+    return res;
+}
+
+char* cgen(cmarkov* chain, uint32_t N, char init) {
+    char* seq = malloc(sizeof(char)*(N+2));
+
+    char prev = init;
+    for (int i = 0; i < N; i++) {
+        seq[i] = csample(chain, prev);
+        prev = seq[i];
+    }
+
+    seq[N+2] = '\0';
+    return seq;
+}
+
 void destroy_cmarkov(cmarkov* chain) {
     for (int i = 0; i < 256; i++) free(chain[i]);
-    free(chain);
+    free(chain); 
 }
 
 int main(int argc, char** argv) {
@@ -61,8 +94,12 @@ int main(int argc, char** argv) {
         //puts(USAGE);
         //exit(EXIT_FAILURE);
     }
+    srand(time(NULL));
+
     const char* paths[1] = {"data/shakespeare.txt"};
     cmarkov chain = character_fit(paths, 1);
-
+    char* text = cgen(&chain, 50, 'A');
+    printf("%s\n", text);
+    free(text);
     destroy_cmarkov(&chain);
 }

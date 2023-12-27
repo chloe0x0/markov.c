@@ -17,5 +17,7 @@ char** read_ngrams(const char*, int, int);
 void destroy_cmarkov(cmarkov*);
 // Sample from a char_markov_chain
 char csample(cmarkov*,char);
+// Generate a sequence of N characters from a cmarkov
+char* cgen(cmarkov*,uint32_t,char);
 
 #endif /* End of MARKOV_H_ implementation */
