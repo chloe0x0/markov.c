@@ -96,9 +96,9 @@ int main(int argc, char** argv) {
     }
     srand(time(NULL));
 
-    const char* paths[1] = {"data/shakespeare.txt"};
+    const char* paths[1] = {"data/ts.txt"};
     cmarkov chain = character_fit(paths, 1);
-    char* text = cgen(&chain, 500, 'A');
+    char* text = cgen(&chain, 1000, 'a');
     printf("%s\n", text);
     free(text);
     destroy_cmarkov(&chain);
