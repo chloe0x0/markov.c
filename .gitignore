@@ -1,5 +1,5 @@
 *.vscode
-
+/data/*.txt
 # Prerequisites
 *.d
 
