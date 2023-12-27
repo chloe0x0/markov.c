@@ -30,9 +30,45 @@
 
 */
 
+char_markov_chain character_fit(const char** paths, int num_paths) {
+    char_markov_chain chain = calloc(256,sizeof(uint32_t*));    
+    for (int i = 0; i < 256; i++) chain[i] = calloc(256,sizeof(uint32_t));
+
+    // iterate over the filepaths 
+    for (int i = 0; i < num_paths; i++) {
+        // Read the characters
+        FILE* fp = fopen(paths[i], "r");
+        char c = fgetc(fp), prev = '\0';
+        while (c != EOF) {
+            prev = c;
+            c = fgetc(fp);
+            chain[prev][c]++;
+        }
+
+        fclose(fp);
+    }
+
+    return chain;
+}
+
+void destroy_char_markov_chain(char_markov_chain* chain) {
+    for (int i = 0; i < 256; i++) free(chain[i]);
+    free(chain);
+}
+
 int main(int argc, char** argv) {
     if (argc < 2) {
-        puts(USAGE);
-        exit(EXIT_FAILURE);
+        //puts(USAGE);
+        //exit(EXIT_FAILURE);
     }
+    const char* paths[1] = {"data/shakespeare.txt"};
+    char_markov_chain chain = character_fit(paths, 1);
+
+    char c = 'a';
+    uint32_t* transitions = chain[c];
+    for (int i = 0; i < 256; i++) {
+        printf("a -> %c | %d\n", (char)i, chain[c][i]);
+    }
+
+    destroy_char_markov_chain(&chain);
 }

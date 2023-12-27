@@ -6,7 +6,7 @@
 #include <stdint.h>
 
 #define INIT_CAP 1024
-#define n 2
+#define n 1
 
 /* Default Hash Function 
 http://www.cse.yorku.ca/~oz/hash.html
@@ -99,23 +99,15 @@ hash_table* table_with_capacity(size_t cap) {
     return table;
 }
 
-bool search(char* val, hash_table* table) {
-    size_t hash = table->hash(val) % table->capacity;
+bool search(char* key, hash_table* table) {
+    size_t hash = table->hash(key) % table->capacity;
 
     kv* pair = table->kvs[hash];
-    if (pair == NULL) return false;
-
-    if (!strcmp(pair->key, val)) return true;
-
-    // search the chain
-    kv* search = pair->next;
-    if (search == NULL) {
-        return false;
-    }
-
-    while (search->next != NULL) {
-        if (!strcmp(pair->key,val)) return true;
-        search = search->next;
+    while (pair != NULL) {
+        if (!strcmp(pair->key,key)) {
+            return true;
+        }
+        pair = pair->next;
     }
     
     return false;
@@ -219,6 +211,7 @@ int main(void) {
             int i;
             for (i = 0; i < n && tokens!=NULL; i++) {
                 strcat(n_gram, tokens);
+                strcat(n_gram, " ");
                 tokens = strtok(NULL, " \t\n");
             }
             if (i == n) {
