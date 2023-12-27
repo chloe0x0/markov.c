@@ -68,7 +68,7 @@ char csample(cmarkov* chain, char state) {
             break;
         }
     }
-    return res;
+    return (char)res;
 }
 
 char* cgen(cmarkov* chain, uint32_t N, char init) {
@@ -76,8 +76,8 @@ char* cgen(cmarkov* chain, uint32_t N, char init) {
 
     char prev = init;
     for (int i = 0; i < N; i++) {
-        seq[i] = csample(chain, prev);
-        prev = seq[i];
+        seq[i] = prev;
+        prev = csample(chain, prev);
     }
 
     seq[N+2] = '\0';
