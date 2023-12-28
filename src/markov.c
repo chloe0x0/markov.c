@@ -90,7 +90,7 @@ void destroy_cmarkov(cmarkov* chain) {
 }
 
 markov* ngram_fit(const char** paths, uint32_t num_paths, uint32_t N) {
-    markov* chain = (markov*)table_with_capacity();
+    markov* chain = (markov*)table_with_capacity(100);
 
     for (int i = 0; i < num_paths; i++) {
         FILE* fp = fopen(paths[i], "r");
@@ -113,7 +113,7 @@ int main(int argc, char** argv) {
 
     const char* paths[1] = {"data/ts.txt"};
     cmarkov chain = character_fit(paths, 1);
-    char* text = cgen(&chain, 1000, 'a');
+    char* text = cgen(&chain, 1000, 'T');
     printf("%s\n", text);
     free(text);
     destroy_cmarkov(&chain);
