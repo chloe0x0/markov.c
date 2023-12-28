@@ -9,8 +9,7 @@
 #define INIT_CAP 1024
 #define REHASH_THRESH 0.75
 #define GROWTH_FACTOR 2
-#define SEED 13937
-#define n 3
+#define SEED 19337
 
 /* Default Hash Function 
 http://www.cse.yorku.ca/~oz/hash.html
@@ -264,6 +263,7 @@ int main(void) {
 
     hash_table* freq = build_table();
 
+    #define n 1
     char line[1024];
     while (fgets(line, sizeof(line), fp) != NULL) {
         // tokenize the line buffer
@@ -288,17 +288,18 @@ int main(void) {
         }
     }
 
-    int collisions = 0, elements = 0;
     
+    int collisions = 0, elements = 0;
+
     for (int i = 0; i < freq->capacity; i++) {
         if (freq->kvs[i] == NULL) continue;
         kv* pair = freq->kvs[i];
         elements++;
-        printf("freq[%s] = %d\n", pair->key, pair->val);
+        //printf("freq[%s] = %d\n", pair->key, pair->val);
         kv* search = pair->next;
 
         while (search != NULL) {
-            printf("Chain: freq[%s] = %d\n", search->key, search->val);
+            //printf("Chain: freq[%s] = %d\n", search->key, search->val);
             search = search->next;
             collisions++;
             elements++;
@@ -308,6 +309,7 @@ int main(void) {
     printf("%d collisions with %d elements\n", collisions, elements);
     printf("%d elements, capacity of %d buckets\n", freq->size, freq->capacity);
     printf("Load factor: %f\n", (float)freq->size/(float)freq->capacity);
+    
 
     delete_table(freq);
     // read characters 
