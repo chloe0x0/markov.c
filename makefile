@@ -1,5 +1,5 @@
 CC = gcc
-CFLAGS = -O3
+CFLAGS = -O3 -ffast-math
 OUTPUT_NAME = markov
 
 hashtable.o: src/hashtable.c src/hashtable.h

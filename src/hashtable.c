@@ -8,8 +8,9 @@
 
 #define INIT_CAP 1024
 #define REHASH_THRESH 0.75
-#define GROWTH_FACTOR 2.75
-#define n 1
+#define GROWTH_FACTOR 2
+#define SEED 13937
+#define n 3
 
 /* Default Hash Function 
 http://www.cse.yorku.ca/~oz/hash.html
@@ -42,15 +43,46 @@ size_t crc32b(char *str) {
     return ~crc;
 }
 
-size_t MurmurOAAT64(char* key)
-{
-  uint64_t h = 525201411107845655ull;
-  for (;*key;++key) {
-    h ^= *key;
-    h *= 0x5bd1e9955bd1e995;
-    h ^= h >> 47;
-  }
-  return (size_t)h;
+/* DEFAULT HASH FUNCTION */
+size_t MurmurOAAT64(char* key) {
+    const uint64_t len = strlen(key);
+    const uint64_t m = 0xc6a4a7935bd1e995;
+    const int r = 47;
+
+    uint64_t h = SEED ^ (len * m);
+    const uint64_t *data = (const uint64_t*)key;
+    const uint64_t* end = data + len/8;
+
+    while (data != end) {
+        uint64_t k = *data++;
+        k *= m;
+        k ^= k >> r;
+        k *= m;
+
+        h ^= k;
+        h *= m;
+    }
+    
+    const uint8_t* tail = (const uint8_t*)data;
+    uint64_t k = 0;
+
+    switch (len & 7) {
+        case 7: k ^= tail[6] << 48;
+        case 6: k ^= tail[5] << 40;
+        case 5: k ^= tail[4] << 32;
+        case 4: k ^= tail[3] << 24;
+        case 3: k ^= tail[2] << 16;
+        case 2: k ^= tail[1] << 8;
+        case 1: k ^= tail[0];
+                k *= m;
+    }
+
+    h ^= k;
+    h ^= h >> r;
+    h *= m;
+    h ^= h >> r;
+
+    return (size_t)h;
 }
 
 kv* construct_kv(char* key, void* val) {
@@ -75,7 +107,7 @@ hash_table* build_table() {
     table->capacity = INIT_CAP;
     table->size = 0;
     table->kvs = calloc(table->capacity, sizeof(kv*));
-    table->hash = &djb2;
+    table->hash = &MurmurOAAT64;
     if (table->kvs == NULL) {
         fprintf(stderr, "Could not allocate %d kv pairs\n", INIT_CAP);
         exit(EXIT_FAILURE);
@@ -149,8 +181,7 @@ void rehash(hash_table* table) {
 bool set(char* key, void* val, hash_table* table) {
     // check if we need to rehash
     // by computing the ~load~factor >w<
-    float load = (float)table->size / (float)table->capacity;
-    if (load > REHASH_THRESH) {
+    if (table->size == table->capacity*REHASH_THRESH) {
         // rehash
         rehash(table);
     }
@@ -168,6 +199,7 @@ bool set(char* key, void* val, hash_table* table) {
         pair = pair->next;
     }
 
+    // insert the new kv pair
     kv* new_kv = construct_kv(key, val);
     new_kv->next = table->kvs[hash];
     table->kvs[hash] = new_kv;
@@ -231,7 +263,6 @@ int main(void) {
     }
 
     hash_table* freq = build_table();
-    set_hash(freq, &MurmurOAAT64);
 
     char line[1024];
     while (fgets(line, sizeof(line), fp) != NULL) {
@@ -258,7 +289,7 @@ int main(void) {
     }
 
     int collisions = 0, elements = 0;
-
+    
     for (int i = 0; i < freq->capacity; i++) {
         if (freq->kvs[i] == NULL) continue;
         kv* pair = freq->kvs[i];
@@ -275,6 +306,8 @@ int main(void) {
     }
 
     printf("%d collisions with %d elements\n", collisions, elements);
+    printf("%d elements, capacity of %d buckets\n", freq->size, freq->capacity);
+    printf("Load factor: %f\n", (float)freq->size/(float)freq->capacity);
 
     delete_table(freq);
     // read characters 
