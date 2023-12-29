@@ -5,8 +5,13 @@
 #include <time.h>
 #include "markov.h"
 
-#define USAGE "markov.exe n-gram-size [text file(s)]"
+#define MAX_FILES 900
+#define USAGE "markov.exe is-char[bool] order[int] iters(int) init_state[string] [text files]"
 
+bool arg_to_bool(const char* arg) {
+    if (!strcmp(arg,"0")) { return false; }
+    return true;
+}
 
 cmarkov character_fit(const char** paths, int num_paths) {
     cmarkov chain = calloc(256,sizeof(uint32_t*));    
@@ -32,6 +37,10 @@ cmarkov character_fit(const char** paths, int num_paths) {
 char csample(cmarkov* chain, char state) {
     // get transition list
     uint32_t* trans = (*chain)[state];
+    if (trans == NULL) {
+        fprintf(stderr, "%c not in chain!\n", state);
+        exit(EXIT_FAILURE);
+    }
 
     // perform random weighted sampling
     // we know ahead of time that the number of elements is 256
@@ -158,6 +167,10 @@ markov* fit(const char** paths, uint32_t num_paths, uint32_t order, bool is_char
     // fit by N character model
     for (int i = 0; i < num_paths; i++) {
         FILE* fp = fopen(paths[i], "r");
+        if (fp == NULL) {
+            fprintf(stderr, "Could not read: %s\n", paths[i]);
+            exit(EXIT_FAILURE);
+        }
 
         char* prev_state = "<START>";
         char c = '\0';
@@ -220,15 +233,59 @@ void destroy_markov(markov* chain) {
 
 int main(int argc, char** argv) {
     if (argc < 2) {
-        //puts(USAGE);
-        //exit(EXIT_FAILURE);
+        puts(USAGE);
+        exit(EXIT_FAILURE);
     }
     srand(time(NULL));
 
-    const char* paths[1] = {"data/ts.txt"};
-    markov* chain = fit(paths, 1, 2, true);
-    char* text = gen(chain, "Th", 100);
+    // shift the args to remove the executable name
+    *argv++; 
+
+    // parse out the is-char
+    bool is_char = arg_to_bool(*argv++);
+    // parse out the order
+    int order = atoi(*argv);
+    if (order == 0) {
+        if (is_char) fprintf(stderr, "Invalid number of characters [%s] per state!\n", *argv);
+        else fprintf(stderr, "Invalid number of words [%s] per state!\n", *argv);
+    }
+    argv++;
+
+    // Parse out the iters
+    int iters = atoi(*argv);
+    if (iters == 0) {
+        fprintf(stderr, "Invalid number of generated states!\n Expected an integral number, got: %s\n", *argv);
+    }
+
+    argv++;
+
+    // Parse out the initial state
+    char* init_state = *argv++;
+
+    // get the text files
+    const char** paths = malloc(sizeof(char*)*MAX_FILES);
+    int i;
+    for (i = 0; i < MAX_FILES; i++) {
+        if (i >= argc-5) {
+            break;
+        }
+        paths[i] = *argv++;
+    }
+
+    printf("is_char: %d, iters: %d, order: %d, files: %i, init_state: %s\n", is_char, iters, order, i, init_state);
+
+    if (is_char && order == 1) {
+        cmarkov chain = character_fit(paths, i);
+        char* text = cgen(&chain, iters, *init_state);
+        printf("%s\n", text);
+        free(text);
+        destroy_cmarkov(&chain);
+        exit(EXIT_SUCCESS);
+    }
+
+    markov* chain = fit(paths, i, order, is_char);
+    char* text = gen(chain, init_state, iters);
     printf("%s\n", text);
     free(text);
-    destroy_markov(&chain);
+    destroy_markov(chain);
 }
