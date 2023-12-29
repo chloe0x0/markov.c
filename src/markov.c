@@ -15,6 +15,10 @@ bool arg_to_bool(const char* arg) {
     return true;
 }
 
+bool is_whitespace(char arg) {
+    return strchr(" \n\t", arg) != NULL;
+}
+
 char* random_key(hash_table* table) {
     size_t idx = rand() % table->capacity;
 
@@ -93,10 +97,14 @@ void destroy_cmarkov(cmarkov* chain) {
 }
 
 markov* ngram_fit(const char** paths, uint32_t num_paths, uint32_t N) {
-    markov* chain = (markov*)table_with_capacity(19937*2);
+    markov* chain = (markov*)table_with_capacity(1000000);
 
     for (int i = 0; i < num_paths; i++) {
         FILE* fp = fopen(paths[i], "r");
+        if (fp == NULL) {
+            fprintf(stderr, "Could not open: %s\n", paths[i]);
+            exit(EXIT_FAILURE);
+        }
 
         // read the n-grams
         char line[1024];
