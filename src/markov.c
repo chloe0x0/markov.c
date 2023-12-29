@@ -256,7 +256,7 @@ int main(int argc, char** argv) {
     srand(time(NULL));
 
     // shift the args to remove the executable name
-    *argv++; 
+    argv++; 
 
     // parse out the is-char
     bool is_char = arg_to_bool(*argv++);
