@@ -6,38 +6,7 @@
 #include "markov.h"
 
 #define USAGE "markov.exe n-gram-size [text file(s)]"
-/*
-        How to represent the Markov Chain?
-            Graph Representation
-            Adjacency List (weighted)
 
-        Hashtable<String,Something>
-
-        How to get N-Grams?
-        What capabilities do we want?
-
-        Want to allow character and n-gram level Markov Chains
-        Serializable models
-        Fast generation
-            Generate to stdout or to a FILE*
-        
-
-        Markov Chain structure:
-
-        Hash Table mapping states to their state transition lists
-        Transition lists: Hashtables mapping connected states and their transition probabilities
-            Why store transition lists as hashtables? We are always doing a linear traversal over them anyway
-            Instead, use a dynamic array or linked list
-
-*/
-
-void remove_newline(char* str) {
-    char* ptr = str;
-    while (*ptr) {
-        if (*ptr=='\n') *ptr=' ';
-        ptr++;
-    }
-}
 
 cmarkov character_fit(const char** paths, int num_paths) {
     cmarkov chain = calloc(256,sizeof(uint32_t*));    
@@ -121,7 +90,6 @@ markov* ngram_fit(const char** paths, uint32_t num_paths, uint32_t N) {
                 }
                 if (i == N) {
                     n_gram[strlen(n_gram) + 1] = '\0';
-                    remove_newline(n_gram);
                     if (!search(prev_state,chain)) {
                         hash_table* trans = build_table();
                         set(prev_state,(void*)trans,chain);
