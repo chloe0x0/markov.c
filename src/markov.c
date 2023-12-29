@@ -5,6 +5,8 @@
 #include <time.h>
 #include "markov.h"
 
+#define START_STATE "[START]"
+#define RAND_STATE "[RAND]"
 #define MAX_FILES 900
 #define USAGE "markov.exe is-char[bool] order[int] iters(int) init_state[string] [text files]"
 
@@ -84,7 +86,7 @@ markov* ngram_fit(const char** paths, uint32_t num_paths, uint32_t N) {
 
         // read the n-grams
         char line[1024];
-        char* prev_state = "<START>";
+        char* prev_state = START_STATE;
         while (fgets(line, sizeof(line), fp) != NULL) {
             // tokenize the line buffer
             char* tokens = strtok(line, " \n\t");
@@ -94,7 +96,7 @@ markov* ngram_fit(const char** paths, uint32_t num_paths, uint32_t N) {
                 int i;
                 for (i = 0; i < N && tokens!=NULL; i++) {
                     strcat(n_gram, tokens);
-                    strcat(n_gram, " ");
+                    if (i < N-1) strcat(n_gram, " ");
                     tokens = strtok(NULL, " \t\n");
                 }
                 if (i == N) {
@@ -172,7 +174,7 @@ markov* fit(const char** paths, uint32_t num_paths, uint32_t order, bool is_char
             exit(EXIT_FAILURE);
         }
 
-        char* prev_state = "<START>";
+        char* prev_state = START_STATE;
         char c = '\0';
         while (c != EOF) {
             char* state = calloc(sizeof(char),order+2);
@@ -209,6 +211,7 @@ char* gen(markov* chain, char* state, uint32_t N) {
 
     for (int i = 0; i < N; i++) {
         strcat(seq, curr);
+        strcat(seq, " ");
         curr = sample(chain,curr);
         if (curr == NULL) break;
     }
