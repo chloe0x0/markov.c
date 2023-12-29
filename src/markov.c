@@ -21,7 +21,7 @@ char* random_key(hash_table* table) {
     kv* curr = table->kvs[idx];
     while (curr == NULL) {
         // wrap around branchlessly
-        idx = idx+1*(idx<table->capacity);
+        idx = (idx+1)*(idx<table->capacity);
 
         curr = table->kvs[idx];
     }
