@@ -11,9 +11,6 @@
 #define GROWTH_FACTOR 2
 #define SEED 19337
 
-/* Default Hash Function 
-http://www.cse.yorku.ca/~oz/hash.html
-*/
 size_t djb2(char* key) {
     size_t hash = 5381;
 
