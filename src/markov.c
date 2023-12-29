@@ -5,14 +5,28 @@
 #include <time.h>
 #include "markov.h"
 
-#define START_STATE "[START]"
-#define RAND_STATE "[RAND]"
+#define START_STATE "{START}"
+#define RAND_STATE "{RAND}"
 #define MAX_FILES 900
 #define USAGE "markov.exe is-char[bool] order[int] iters(int) init_state[string] [text files]"
 
 bool arg_to_bool(const char* arg) {
     if (!strcmp(arg,"0")) { return false; }
     return true;
+}
+
+char* random_key(hash_table* table) {
+    size_t idx = rand() % table->capacity;
+
+    kv* curr = table->kvs[idx];
+    while (curr == NULL) {
+        // wrap around branchlessly
+        idx = idx+1*(idx<table->capacity);
+
+        curr = table->kvs[idx];
+    }
+
+    return curr->key;
 }
 
 cmarkov character_fit(const char** paths, int num_paths) {
@@ -264,6 +278,7 @@ int main(int argc, char** argv) {
 
     // Parse out the initial state
     char* init_state = *argv++;
+    bool rand_state = !strcmp(init_state, RAND_STATE);
 
     // get the text files
     const char** paths = malloc(sizeof(char*)*MAX_FILES);
@@ -275,10 +290,9 @@ int main(int argc, char** argv) {
         paths[i] = *argv++;
     }
 
-    printf("is_char: %d, iters: %d, order: %d, files: %i, init_state: %s\n", is_char, iters, order, i, init_state);
-
     if (is_char && order == 1) {
         cmarkov chain = character_fit(paths, i);
+        if (rand_state) *init_state = rand() % 95 + 32;
         char* text = cgen(&chain, iters, *init_state);
         printf("%s\n", text);
         free(text);
@@ -287,6 +301,7 @@ int main(int argc, char** argv) {
     }
 
     markov* chain = fit(paths, i, order, is_char);
+    if (rand_state) init_state = random_key(chain);
     char* text = gen(chain, init_state, iters);
     printf("%s\n", text);
     free(text);
