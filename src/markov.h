@@ -19,5 +19,11 @@ void destroy_cmarkov(cmarkov*);
 char csample(cmarkov*,char);
 // Generate a sequence of N characters from a cmarkov
 char* cgen(cmarkov*,uint32_t,char);
+// Destructor for a markov chain
+void destroy_markov(markov*);
+// Sample a state from a markov chain
+char* sample(markov*,char*);
+// Generate a sequence of states from a markov chain
+char* gen(markov*,char*,uint32_t);
 
 #endif /* End of MARKOV_H_ implementation */

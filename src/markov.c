@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdbool.h>
+#include <string.h>
 #include <time.h>
 #include "markov.h"
 
@@ -29,6 +30,14 @@
             Instead, use a dynamic array or linked list
 
 */
+
+void remove_newline(char* str) {
+    char* ptr = str;
+    while (*ptr) {
+        if (*ptr=='\n') *ptr=' ';
+        ptr++;
+    }
+}
 
 cmarkov character_fit(const char** paths, int num_paths) {
     cmarkov chain = calloc(256,sizeof(uint32_t*));    
@@ -96,12 +105,109 @@ markov* ngram_fit(const char** paths, uint32_t num_paths, uint32_t N) {
         FILE* fp = fopen(paths[i], "r");
 
         // read the n-grams
-
+        char line[1024];
+        while (fgets(line, sizeof(line), fp) != NULL) {
+            // tokenize the line buffer
+            char* tokens = strtok(line, " \n\t");
+            char* prev_state = "<START>";
+            // use a sliding window of size N, to get N-grams
+            while (tokens != NULL) {
+                char* n_gram = calloc(sizeof(char), N*100 + 1);
+                int i;
+                for (i = 0; i < N && tokens!=NULL; i++) {
+                    strcat(n_gram, tokens);
+                    strcat(n_gram, " ");
+                    tokens = strtok(NULL, " \t\n");
+                }
+                if (i == N) {
+                    n_gram[strlen(n_gram) + 1] = '\0';
+                    remove_newline(n_gram);
+                    if (!search(prev_state,chain)) {
+                        hash_table* trans = build_table();
+                        set(prev_state,(void*)trans,chain);
+                    }
+                    hash_table* trans = (hash_table*)get(prev_state,chain);
+                    if (!search(n_gram,trans)) {
+                        set(n_gram,0,trans);
+                    }
+                    int prev = ((int)get(n_gram,trans)) + 1;
+                    update(n_gram,prev,trans);
+                    prev_state = n_gram;
+                }
+            }
+        }
 
         fclose(fp);
     }
 
     return chain;
+}
+
+char* sample(markov* chain, char* state) {
+    hash_table* trans = get(state,chain);
+    if (trans == NULL) {
+        return NULL;
+    }
+
+    uint32_t sum = 0, acc = 0;
+    for (int i = 0; i < trans->capacity; i++) {
+        if (trans->kvs[i] == NULL) continue;
+        kv* curr = trans->kvs[i];
+ 
+        while (curr != NULL) {
+            sum += (int)curr->val;
+            curr = curr->next;
+        }
+    }
+
+    size_t r = rand() % sum;
+
+    char* curr_best = NULL;
+
+    for (int i = 0; i < trans->capacity; i++) {
+        if (trans->kvs[i] == NULL) continue;
+
+        kv* curr = trans->kvs[i];
+        while (curr != NULL) {
+            acc += (int)curr->val;
+            if (r < acc) {
+                return curr->key;
+            }
+
+            curr_best = curr->key;
+            curr = curr->next;
+        }
+    }
+
+    return curr_best;
+}
+
+char* gen(markov* chain, char* state, uint32_t N) {
+    char* seq = malloc(sizeof(char)*N+100);
+    char* curr = state;
+
+    for (int i = 0; i < N; i++) {
+        strcat(seq, curr);
+        curr = sample(chain,curr);
+        if (curr == NULL) break;
+    }
+
+    return seq;
+}
+
+void destroy_markov(markov* chain) {
+    for (int i = 0; i < chain->capacity; i++) {
+        kv* curr = chain->kvs[i];
+        if (curr == NULL) continue;
+        while (curr) {
+            free(curr->key);
+            delete_table(curr->val);
+            curr = curr->next;
+        }
+    }
+
+    free(chain->kvs);
+    free(chain);
 }
 
 int main(int argc, char** argv) {
@@ -112,9 +218,9 @@ int main(int argc, char** argv) {
     srand(time(NULL));
 
     const char* paths[1] = {"data/ts.txt"};
-    cmarkov chain = character_fit(paths, 1);
-    char* text = cgen(&chain, 1000, 'T');
+    markov* chain = ngram_fit(paths, 1, 2);
+    char* text = gen(chain, "Jang had ", 25);
     printf("%s\n", text);
     free(text);
-    destroy_cmarkov(&chain);
+    destroy_markov(&chain);
 }

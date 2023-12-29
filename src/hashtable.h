@@ -50,7 +50,7 @@ hash_table* build_table();
 // Constructor for a hashtable with a specified capacity
 hash_table* table_with_capacity(size_t);
 // Change the hash function of a hashtable
-void set_hash(hash_table* table, size_t (*f)(char*)) {table->hash = f;}
+void set_hash(hash_table*, size_t (*f)(char*));
 // Destructor for a hash table
 void delete_table(hash_table*);
 // Function for rehashing a table in place

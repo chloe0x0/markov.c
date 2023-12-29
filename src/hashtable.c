@@ -133,6 +133,10 @@ hash_table* table_with_capacity(size_t cap) {
     return table;
 }
 
+void set_hash(hash_table* table, size_t (*f)(char*)) {
+    table->hash = f;
+}
+
 bool search(char* key, hash_table* table) {
     size_t hash = table->hash(key) % table->capacity;
 
@@ -253,9 +257,10 @@ void delete_table(hash_table* table) {
     free(table);
 }
 
+/*
 int main(void) {    
     // test collisions on real world data
-    FILE* fp = fopen("data/shakespeare.txt", "r");
+    FILE* fp = fopen("data/ts.txt", "r");
     if (!fp) {
         printf("Could not open test file!\n");
         exit(EXIT_FAILURE);
@@ -263,7 +268,7 @@ int main(void) {
 
     hash_table* freq = build_table();
 
-    #define n 1
+    #define n 2
     char line[1024];
     while (fgets(line, sizeof(line), fp) != NULL) {
         // tokenize the line buffer
@@ -407,7 +412,7 @@ int main(void) {
             search = search->next;
         }
     }
-    */
 
     fclose(fp);
 }
+*/
