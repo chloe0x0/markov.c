@@ -150,6 +150,46 @@ char* sample(markov* chain, char* state) {
     return curr_best;
 }
 
+markov* fit(const char** paths, uint32_t num_paths, uint32_t order, bool is_char) {
+    if (!is_char) return ngram_fit(paths, num_paths, order);
+
+    markov* chain = table_with_capacity(19937 * 2);
+
+    // fit by N character model
+    for (int i = 0; i < num_paths; i++) {
+        FILE* fp = fopen(paths[i], "r");
+
+        char* prev_state = "<START>";
+        char c = '\0';
+        while (c != EOF) {
+            char* state = calloc(sizeof(char),order+2);
+            int j;
+            for (j = 0; j < order && c != EOF; j++) {
+                c = fgetc(fp);
+                state[j] = c;
+            }
+            state[order + 1] = '\0';
+
+            if (!search(prev_state, chain)) {
+                hash_table* trans = table_with_capacity(257);
+                set(prev_state, trans, chain);
+            }
+            hash_table* trans = get(prev_state, chain);
+
+            if (!search(state, trans)) {
+                set(state,0,trans);
+            }
+
+            int prev = (int)get(state,trans) + 1;
+            update(state, prev, trans);
+            prev_state = state;
+        }
+        fclose(fp);
+    }
+
+    return chain;
+}
+
 char* gen(markov* chain, char* state, uint32_t N) {
     char* seq = malloc(sizeof(char)*N+100);
     char* curr = state;
@@ -186,8 +226,8 @@ int main(int argc, char** argv) {
     srand(time(NULL));
 
     const char* paths[1] = {"data/ts.txt"};
-    markov* chain = ngram_fit(paths, 1, 2);
-    char* text = gen(chain, "<START>", 100);
+    markov* chain = fit(paths, 1, 2, true);
+    char* text = gen(chain, "Th", 100);
     printf("%s\n", text);
     free(text);
     destroy_markov(&chain);
