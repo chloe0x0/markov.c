@@ -75,10 +75,10 @@ markov* ngram_fit(const char** paths, uint32_t num_paths, uint32_t N) {
 
         // read the n-grams
         char line[1024];
+        char* prev_state = "<START>";
         while (fgets(line, sizeof(line), fp) != NULL) {
             // tokenize the line buffer
             char* tokens = strtok(line, " \n\t");
-            char* prev_state = "<START>";
             // use a sliding window of size N, to get N-grams
             while (tokens != NULL) {
                 char* n_gram = calloc(sizeof(char), N*100 + 1);
@@ -187,7 +187,7 @@ int main(int argc, char** argv) {
 
     const char* paths[1] = {"data/ts.txt"};
     markov* chain = ngram_fit(paths, 1, 2);
-    char* text = gen(chain, "Jang had ", 25);
+    char* text = gen(chain, "<START>", 100);
     printf("%s\n", text);
     free(text);
     destroy_markov(&chain);
