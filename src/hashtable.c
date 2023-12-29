@@ -122,7 +122,7 @@ hash_table* table_with_capacity(size_t cap) {
         exit(EXIT_FAILURE);
     }
     table->capacity = cap;
-    table->hash = &djb2;
+    table->hash = &MurmurOAAT64;
     table->size = 0;
     table->kvs = calloc(table->capacity, sizeof(kv*));
     if (table->kvs == NULL) {
