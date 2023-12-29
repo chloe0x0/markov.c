@@ -68,7 +68,7 @@ void destroy_cmarkov(cmarkov* chain) {
 }
 
 markov* ngram_fit(const char** paths, uint32_t num_paths, uint32_t N) {
-    markov* chain = (markov*)table_with_capacity(100);
+    markov* chain = (markov*)table_with_capacity(19937*2);
 
     for (int i = 0; i < num_paths; i++) {
         FILE* fp = fopen(paths[i], "r");
@@ -91,7 +91,7 @@ markov* ngram_fit(const char** paths, uint32_t num_paths, uint32_t N) {
                 if (i == N) {
                     n_gram[strlen(n_gram) + 1] = '\0';
                     if (!search(prev_state,chain)) {
-                        hash_table* trans = build_table();
+                        hash_table* trans = table_with_capacity(15);
                         set(prev_state,(void*)trans,chain);
                     }
                     hash_table* trans = (hash_table*)get(prev_state,chain);
