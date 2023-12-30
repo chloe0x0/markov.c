@@ -97,7 +97,7 @@ void destroy_cmarkov(cmarkov* chain) {
 }
 
 markov* ngram_fit(const char** paths, uint32_t num_paths, uint32_t N) {
-    markov* chain = (markov*)table_with_capacity(1000000);
+    markov* chain = (markov*)build_table();
 
     for (int i = 0; i < num_paths; i++) {
         FILE* fp = fopen(paths[i], "r");
@@ -309,9 +309,9 @@ int main(int argc, char** argv) {
     }
 
     markov* chain = fit(paths, i, order, is_char);
-    if (rand_state) init_state = random_key(chain);
-    char* text = gen(chain, init_state, iters);
-    printf("%s\n", text);
-    free(text);
+    //if (rand_state) init_state = random_key(chain);
+    //char* text = gen(chain, init_state, iters);
+    //printf("%s\n", text);
+    //free(text);
     destroy_markov(chain);
 }
