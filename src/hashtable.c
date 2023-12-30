@@ -6,7 +6,7 @@
 
 #include "hashtable.h"
 
-#define INIT_CAP 1024
+#define INIT_CAP 1048583
 #define REHASH_THRESH 0.75
 #define GROWTH_FACTOR 2
 #define SEED 19337
