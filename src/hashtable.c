@@ -201,7 +201,6 @@ bool set(char* key, void* val, hash_table* table) {
     // by computing the ~load~factor >w<
     if (table->size == table->capacity*REHASH_THRESH) {
         // rehash
-        puts("REHASHED!\n");
         rehash(table);
     }
 
