@@ -328,6 +328,7 @@ int main(int argc, char** argv) {
     if (order == 0) {
         if (is_char) fprintf(stderr, "Invalid number of characters [%s] per state!\n", *argv);
         else fprintf(stderr, "Invalid number of words [%s] per state!\n", *argv);
+        exit(EXIT_FAILURE);
     }
     argv++;
 
@@ -335,6 +336,7 @@ int main(int argc, char** argv) {
     int iters = atoi(*argv);
     if (iters == 0) {
         fprintf(stderr, "Invalid number of generated states!\n Expected an integral number, got: %s\n", *argv);
+        exit(EXIT_FAILURE);
     }
 
     argv++;
