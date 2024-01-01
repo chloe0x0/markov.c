@@ -19,6 +19,15 @@ bool is_whitespace(char arg) {
     return strchr(" \n\t", arg) != NULL;
 }
 
+char* strchr_impl(const char* s, const char c) {
+    char* ptr = s;
+    while (*ptr != '\0') {
+        if (*ptr == c) return ptr;
+        ptr++;
+    }
+    return NULL;
+}
+
 char* random_key(hash_table* table) {
     size_t idx = rand() % table->capacity;
 
@@ -96,6 +105,52 @@ void destroy_cmarkov(cmarkov* chain) {
     free(chain); 
 }
 
+markov* wfit(const char** paths, uint32_t num_paths) {
+    markov* chain = (markov*)build_table();
+
+    for (int i = 0; i < num_paths; i++) {
+        FILE* fp = fopen(paths[i], "r");
+        if (fp == NULL) {
+            fprintf(stderr, "Could not read: %s\n", paths[i]);
+            exit(EXIT_FAILURE);
+        }
+
+        const int BUFFER_SIZE = 4096, WORD_SIZE = 16;
+        char line[4096] = {0};
+        char* prev_state = START_STATE;
+
+        while (fread(line, sizeof(char), BUFFER_SIZE, fp) > 0) {
+            char* tokens = strtok(line, " \n\t");
+
+            while (tokens != NULL) {
+                char* word = calloc((WORD_SIZE+1),sizeof(char));
+                memcpy(word, tokens, WORD_SIZE+1);
+                //strcpy(word, tokens);
+                //strcat(word, tokens);
+                if (!search(prev_state, chain)) {
+                    hash_table* table = table_with_capacity(15);
+                    set(prev_state, (void*)table, chain);
+                }
+                
+                hash_table* table = get(prev_state, chain);
+                if (!search(word, table)) {
+                    set(word, 0, table);
+                }
+
+                word[strlen(word) + 1] = '\0';
+                int prev = ((int)get(word, table)) + 1;
+                update(word, prev, table);
+                prev_state = word;
+                tokens = strtok(NULL, " \n\t");
+            }
+        }
+
+        fclose(fp);
+    }
+
+    return chain;
+}
+
 markov* ngram_fit(const char** paths, uint32_t num_paths, uint32_t N) {
     markov* chain = (markov*)build_table();
 
@@ -107,7 +162,7 @@ markov* ngram_fit(const char** paths, uint32_t num_paths, uint32_t N) {
         }
 
         // read the n-grams
-        char line[1024];
+        char line[4096];
         char* prev_state = START_STATE;
         while (fgets(line, sizeof(line), fp) != NULL) {
             // tokenize the line buffer
@@ -186,7 +241,7 @@ char* sample(markov* chain, char* state) {
 markov* fit(const char** paths, uint32_t num_paths, uint32_t order, bool is_char) {
     if (!is_char) return ngram_fit(paths, num_paths, order);
 
-    markov* chain = table_with_capacity(19937 * 2);
+    markov* chain = (markov*)build_table();
 
     // fit by N character model
     for (int i = 0; i < num_paths; i++) {
@@ -308,10 +363,19 @@ int main(int argc, char** argv) {
         exit(EXIT_SUCCESS);
     }
 
-    markov* chain = fit(paths, i, order, is_char);
-    //if (rand_state) init_state = random_key(chain);
-    //char* text = gen(chain, init_state, iters);
-    //printf("%s\n", text);
-    //free(text);
+    markov* chain;
+    if (!is_char && order == 1) {
+        //chain = fit(paths, i, order, is_char);
+        chain = wfit(paths, i);
+    } else {
+        chain = fit(paths, i, order, is_char);
+    }
+
+    if (rand_state) init_state = random_key(chain);
+
+    char* text = gen(chain, init_state, iters);
+    printf("%s\n", text);
+    free(text);
+
     destroy_markov(chain);
 }

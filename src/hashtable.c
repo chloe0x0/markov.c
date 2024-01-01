@@ -22,6 +22,24 @@ size_t djb2(char* key) {
     return hash;
 }
 
+
+static size_t meiyan(const char *key, int count) {
+	typedef uint32_t* P;
+	uint32_t h = 0x811c9dc5;
+	while (count >= 8) {
+		h = (h ^ ((((*(P)key) << 5) | ((*(P)key) >> 27)) ^ *(P)(key + 4))) * 0xad3e7;
+		count -= 8;
+		key += 8;
+	}
+	#define tmp h = (h ^ *(uint16_t*)key) * 0xad3e7; key += 2;
+	if (count & 4) { tmp tmp }
+	if (count & 2) { tmp }
+	if (count & 1) { h = (h ^ *key) * 0xad3e7; }
+	#undef tmp
+	return h ^ (h >> 16);
+}
+
+
 size_t crc32b(char *str) {
     // Source: https://stackoverflow.com/a/21001712
     size_t byte, crc, mask;
@@ -183,6 +201,7 @@ bool set(char* key, void* val, hash_table* table) {
     // by computing the ~load~factor >w<
     if (table->size == table->capacity*REHASH_THRESH) {
         // rehash
+        puts("REHASHED!\n");
         rehash(table);
     }
 
@@ -208,6 +227,7 @@ bool set(char* key, void* val, hash_table* table) {
 
 bool update(char* key, void* new_val, hash_table* table) {
     size_t hash = table->hash(key) % table->capacity;
+
     kv* pair = table->kvs[hash];
 
     while (pair != NULL) {
@@ -241,15 +261,19 @@ void delete_table(hash_table* table) {
         if (table->kvs[i] == NULL) {
             continue;
         }
+
         kv* search = table->kvs[i]->next;
         while (search != NULL) {
             kv* prev = search->next;
             free(search->key);
+#ifdef FREE_VALS
             free(search->val);
+#endif
             free(search);
             search = prev;
         }
     }
+
     free(table->kvs);
     free(table);
 }
