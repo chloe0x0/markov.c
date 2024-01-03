@@ -125,6 +125,7 @@ markov* wfit(const char** paths, uint32_t num_paths) {
             while (tokens != NULL) {
                 char* word = calloc((WORD_SIZE+1),sizeof(char));
                 memcpy(word, tokens, WORD_SIZE+1);
+                word[strlen(word) + 1] = '\0';
                 //strcpy(word, tokens);
                 //strcat(word, tokens);
                 if (!search(prev_state, chain)) {
@@ -137,7 +138,6 @@ markov* wfit(const char** paths, uint32_t num_paths) {
                     set(word, 0, table);
                 }
 
-                word[strlen(word) + 1] = '\0';
                 int prev = ((int)get(word, table)) + 1;
                 update(word, prev, table);
                 prev_state = word;
@@ -282,13 +282,13 @@ markov* fit(const char** paths, uint32_t num_paths, uint32_t order, bool is_char
     return chain;
 }
 
-char* gen(markov* chain, char* state, uint32_t N) {
+char* gen(markov* chain, char* state, uint32_t N, bool space) {
     char* seq = malloc(sizeof(char)*N+100);
     char* curr = state;
 
     for (int i = 0; i < N; i++) {
         strcat(seq, curr);
-        strcat(seq, " ");
+        if (space) strcat(seq, " ");
         curr = sample(chain,curr);
         if (curr == NULL) break;
     }
@@ -375,7 +375,7 @@ int main(int argc, char** argv) {
 
     if (rand_state) init_state = random_key(chain);
 
-    char* text = gen(chain, init_state, iters);
+    char* text = gen(chain, init_state, iters, !is_char);
     printf("%s\n", text);
     free(text);
 

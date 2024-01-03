@@ -205,7 +205,6 @@ bool set(char* key, void* val, hash_table* table) {
     }
 
     size_t hash = table->hash(key) % table->capacity;
-    
     kv* pair = table->kvs[hash];
     while (pair != NULL) {
         if (!strcmp(pair->key, key)) {

@@ -22,6 +22,6 @@ void destroy_markov(markov*);
 // Sample a state from a markov chain
 char* sample(markov*, char*);
 // Generate a sequence of states from a markov chain
-char* gen(markov*, char*, uint32_t);
+char* gen(markov*, char*, uint32_t, bool);
 
 #endif /* End of MARKOV_H_ implementation */
