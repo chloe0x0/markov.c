@@ -19,15 +19,6 @@ bool is_whitespace(char arg) {
     return strchr(" \n\t", arg) != NULL;
 }
 
-char* strchr_impl(const char* s, const char c) {
-    char* ptr = s;
-    while (*ptr != '\0') {
-        if (*ptr == c) return ptr;
-        ptr++;
-    }
-    return NULL;
-}
-
 char* random_key(hash_table* table) {
     size_t idx = rand() % table->capacity;
 
